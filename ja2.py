@@ -1,14 +1,17 @@
 import time
-import pyttsx3  #text to speech
+import pyttsx3   #text to speech
 import datetime  # for date and time
 import os   #intract with operating system
 import cv2    # for camera vison
 import random   #   for random selection
 import requests  #http data fetch
 import wikipedia
+from termcolor import colored
 import webbrowser
+
+
 import socket
-from cv2 import cv2
+import cv2
 import pywhatkit as kit     # for whatsapp message
 import smtplib  # this module is used to send email to anyone : pip install secure-smptlib
 import sys
@@ -18,14 +21,45 @@ import docx
 import psutil   # google translation
 import gtts
 
+import numpy as np
+import pyautogui as p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import colorama
+from colorama import Fore,Back,Style
+colorama.init(autoreset=True)
+
 
 
 
 #voice
 engine = pyttsx3.init('sapi5')
-voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0"
-voices=engine.getProperty('voice')
-engine.setProperty('voice',voice_id)
+voice_id =[ "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_ZIRA_11.0"
+             ,
+           "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enUS_MarkM\\Attributes",
+           " HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enUS_MarkM ",
+           "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\SPEECH\\Voices\\Tokens\\MSTTS_V110_enUS_MarkM",
+           "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\SPEECH\\Voices\\Tokens\\MSTTS_V110_enUS_MarkM\\Attributes"
+            ]
+
+x=voice_id
+voices=engine.getProperty('voices')
+engine.setProperty('voice',x[0])
 
 # text to speech
 def speak(audio):  # converts in audio
@@ -37,18 +71,18 @@ def speak(audio):  # converts in audio
 def takecommand():
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        print("listening...")
+        print(Back.RED+"listening...")
         r.pause_threshold = 1
         audio = r.listen(source)
     try:
-        print("Recognizing...")
+        print(Back.GREEN+"Recognizing...")
         query = r.recognize_google(audio)
-        print(f"user said: {query}")
+        print(Back.YELLOW+f"user said: {query}")
 
     except Exception as e:
-        print("Say that again please...")
+        print(Fore.YELLOW+"Say that again please...")
         return "none"
-
+    query = query.lower()
     return query
 
 
@@ -56,16 +90,45 @@ def tellDay():
 
     day = datetime.datetime.today().weekday() + 1
 
+
     Day_dict = {1: 'Monday', 2: 'Tuesday', 3: 'Wednesday',
                 4: 'Thursday', 5: 'Friday', 6: 'Saturday',
                 7: 'Sunday'}
 
     if day in Day_dict.keys():
          day_of_the_week = Day_dict[day]
+
         # print(day_of_the_week)
-         speak("Today is " + day_of_the_week)
+         speak("Today    day  is          " + day_of_the_week)
+
+#current time
+def current_date_time():
+
+    current_time = datetime.datetime.now()
+
+    # Printing attributes of now().
+    months_dict = {1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+                7: 'July', 8:'August',9:'September',10:'October',11:'November',12:'December'}
 
 
+
+    if current_time.month in months_dict.keys():
+        month_of_the_year = months_dict[current_time.month]
+        # print(day_of_the_week)
+        #print("Month is " + month_of_the_year)
+
+
+    #speak("The attributes of now() are :")
+   # print(f"Year is {current_time.year}")
+   # print("Date is : ", current_time.day)
+    #print("Hour : ", current_time.hour)
+    #print("Minute : ", current_time.minute)
+    #print("Second :", current_time.second)
+    #print("Microsecond :", current_time.microsecond)
+
+
+    speak(f"today           date is                      {current_time.day}          {month_of_the_year}            {current_time.year}")
+    speak(f"present          time is                    {current_time.hour} hour                  {current_time.minute} minuts                      {current_time.second} seconds        ")
 
 # wish
 def wish():
@@ -84,8 +147,10 @@ def wish():
 
     assname = ("AI assistant  Mohit Mudgal sir ")
     speak(f"I am your {assname}")
+    current_date_time()
     tellDay()
-    speak("How can i help you")
+
+    speak("How can i help you" )
 
 
 
@@ -95,22 +160,21 @@ def sendemail(to, content):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
-    server.login('ramu@gmail.com', '')
+    server.login('ramu@poornima.org', "passwor")
     server.sendmail('2019pietcsnivesh116@poornima.org', to, content)
     server.close()
 
 
-if __name__ == '__main__':
 
-    # takecommand()
+
+
+
+
+
+def TaskExecution():
     wish()
-
-
     while True:
-        # if 1:
-        query = takecommand().lower()
-        # logic building for task     
-
+        query= takecommand().lower()
         if "open notepad" in query:
             speak("opening notepad sir")
             npath = "C:\WINDOWS\\system32\\notepad.exe"
@@ -119,12 +183,26 @@ if __name__ == '__main__':
             speak("opening google chrome")
             gpath = "C:\Program Files\\Google\\Chrome\\Application\\chrome.exe"
             os.startfile(gpath)
-
-
+        elif "open presentation" in query:
+            speak("opening presentation")
+            pppath="C:\\Users\\Admin\\OneDrive\\Desktop\\mohit mudgal Main presentation.pptx"
+            os.startfile(pppath)
+        elif "please introduce me" in query:
+            speak("Hello , he is Mohit Mudgal from jaipur . he is a python developer & he has completed his internship from National Engineering Industries. ")
+        elif "deployment" in query:
+            speak("there is no need of deployment as i run on starting of pc because of start.bat file  and can be used by non technical person")
         elif "open adobe reader" in query:
             speak("opening adobe reader")
             apath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Adobe Reader XI"
             os.startfile(apath)
+
+
+
+
+
+
+
+
 
         elif "open command prompt" in query:
             os.system("start cmd")
@@ -135,13 +213,12 @@ if __name__ == '__main__':
             print(n)
             speak("Here you go with music")
             # music_dir = "C:\\downloaded apps\\pythonProject AI assistant\\songs"
-            music_dir = "W:\\python\\jarvis\\songs"
+            music_dir = "E:\\7th\\ai\\jarvis-master\\songs"
             song = os.listdir(music_dir)
             os.startfile(os.path.join(music_dir, song[n]))
 
-        elif 'window camp' in query:
+        elif 'window camera' in query:
             os.system("start microsoft.windows.camera:")
-
 
 
 
@@ -156,7 +233,6 @@ if __name__ == '__main__':
             speak(results)
             # print(results)
 
-
         elif "open facebook" in query:
             webbrowser.open("www.facebook.com")
 
@@ -169,7 +245,6 @@ if __name__ == '__main__':
                 speak("thats good sir")
             else:
                 speak("all will be good sir")
-
 
 
         elif "who are you" in query:
@@ -193,10 +268,10 @@ if __name__ == '__main__':
 
 
 
-        elif "open google" in query:
-            speak("sir , what should  I serach on google")
+        elif "open edge" in query:
+            speak("sir , what should  I serach on edge")
             cm = takecommand().lower()
-            webbrowser.open(f"{cm}")
+            webbrowser.open(f"{cm}" )
 
 
         elif "send message" in query:                          #whattsapp
@@ -229,8 +304,9 @@ if __name__ == '__main__':
 
 
         elif "shut up" in query:
-            speak("thanks for using me , have a good day")
+            speak("thanks for using me , have a good day .")
             sys.exit()
+
 
 
         # to close any application
@@ -262,12 +338,22 @@ if __name__ == '__main__':
             joke = pyjokes.get_joke()
             speak(joke)
 
+
+
+
         elif "shutdown the system" in query:
+            speak("system will shut down please confirm by saying yes  or no")
+            choice = takecommand().lower()
+
             os.system("shutdown /s /t 1")
+
+
+
         elif "restart the system" in query:
             os.system("shutdown /r /t 1")
         elif "sleep the system" in query:
             os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+
 
 
 
@@ -297,6 +383,18 @@ if __name__ == '__main__':
             speak(f"Current wind speed    :{wind_spd} {'kmph'}" )
             speak(f"current pressure is :{pressure_wind} {'atm'} ")
 
+            y = open("E:\\7th ai\\ai\jarvis-master\output.txt", 'a') #output of weather in txt folder
+            print("-------------------------------------------------------------", file=y)
+            print("Weather Stats for - {}  || {}".format(location.upper(), date_time), file=y)
+            print("-------------------------------------------------------------", file=y)
+            print("Current temperature is: {:.2f} deg C".format(temp_city), file=y)
+            print("Current weather desc  :", weather_desc, file=y)
+            print("Current Humidity      :", hmdt, '%', file=y)
+            print("Current wind speed    :", wind_spd, 'kmph', file=y)
+            print("current pressure is : ", pressure_wind, 'atm', file=y)
+
+            y.close()
+
 
 
         elif "open word" in query:
@@ -307,15 +405,11 @@ if __name__ == '__main__':
 
 
 
-        elif "open camp"  in query:
+        elif "open python camera"  in query:
             import cv2
-            from time import sleep
-
             key = cv2.waitKey(1)
             webcam = cv2.VideoCapture(0)
-            sleep(2)
             while True:
-                speak('press s  to save image')
                 try:
                     check, frame = webcam.read()
                     print(check)  # prints true as long as the webcam is running
@@ -325,19 +419,27 @@ if __name__ == '__main__':
                     if key == ord('s'):
                         cv2.imwrite(filename='saved_img.jpg', img=frame)
                         webcam.release()
+                        img_new = cv2.imread('saved_img.jpg', cv2.IMREAD_GRAYSCALE)
+                        img_new = cv2.imshow("Captured Image", img_new)
+                        cv2.waitKey(1650)
+                        cv2.destroyAllWindows()
                         print("Processing image...")
                         img_ = cv2.imread('saved_img.jpg', cv2.IMREAD_ANYCOLOR)
-
+                        print("Converting RGB image to grayscale...")
+                        gray = cv2.cvtColor(img_, cv2.COLOR_BGR2GRAY)
+                        print("Converted RGB image to grayscale...")
                         print("Resizing image to 28x28 scale...")
-
+                        img_ = cv2.resize(gray, (28, 28))
                         print("Resized...")
                         img_resized = cv2.imwrite(filename='saved_img-final.jpg', img=img_)
                         print("Image saved!")
-                        speak("image saved")
-                        break
 
+                        break
                     elif key == ord('q'):
+                        print("Turning off camera.")
                         webcam.release()
+                        print("Camera off.")
+                        print("Program ended.")
                         cv2.destroyAllWindows()
                         break
 
@@ -348,7 +450,6 @@ if __name__ == '__main__':
                     print("Program ended.")
                     cv2.destroyAllWindows()
                     break
-
 
 
         elif "hide all files" in query or "hide this folder" in query or "visible for everyone" in query:
@@ -401,7 +502,7 @@ if __name__ == '__main__':
 
         elif "open pycharm" in query :
             speak("opening pycharm")
-            ppath ="E:\python\\PyCharm Community Edition 2021.1.2\\bin\\pycharm64.exe"
+            ppath ="C:\\Program Files\\JetBrains\\PyCharm Community Edition 2022.2.1\\bin\\pycharm64.exe"
             os.startfile(ppath)
 
 
@@ -410,4 +511,137 @@ if __name__ == '__main__':
             ppath="W:\ENGINEERING\\5th sem"
             os.startfile(ppath)
 
+        elif "sleep now" in query:
+            speak("i am going to sleep")
+            break
+        elif "open camera" in query:
 
+            import cv2
+            from time import sleep
+
+            key = cv2.waitKey(1)
+
+            webcam = cv2.VideoCapture(0)
+            sleep(2)
+            while True:
+                speak('press s  to save image')
+                try:
+                    check, frame = webcam.read()
+                    print(check)  # prints true as long as the webcam is runnings
+                    print(frame)  # prints matrix values of each framecd
+                    cv2.imshow("Capturing", frame)
+                    key = cv2.waitKey(1)
+                    if key == ord('s'):
+                        cv2.imwrite(filename='saved_img.jpg', img=frame)
+                        webcam.release()
+                        print("Processing image...")
+                        img_ = cv2.read('saved_img.jpg', cv2.READ_ANYCOLOR)
+
+                        print("Resizing image to 28x28 scale...")
+
+                        print("Resized...")
+                        img_resized = cv2.write(filename='saved_img-final.jpg', img=img_)
+                        print("Image saved!")
+                        speak("image saved")
+                        break
+
+                    elif key == ord('q'):
+                        webcam.release()
+                        cv2.destroyAllWindows()
+                        break
+
+                except(KeyboardInterrupt):
+                    print("Turning off camera.")
+                    webcam.release()
+                    print("Camera off.")
+                    print("Program ended.")
+                    cv2.destroyAllWindows()
+                    break
+
+if __name__ == '__main__':
+
+    # takecommand()
+    while True:
+        # if 1:
+        #query = takecommand().lower()
+        # logic building for task
+
+
+        '''
+        permission = takecommand()
+        if "wake up" in permission:
+            TaskExecution()
+            '''
+
+
+        #elif "shut up" or "goodbye" in permission:
+        #    speak("goodby")
+        #    sys.exit()
+        #else:
+        #    takecommand()
+
+
+        recognizer = cv2.face.LBPHFaceRecognizer_create()  # Local Binary Patterns Histograms
+        recognizer.read('trainer/trainer.yml')  # load trained model
+        cascadePath = "haarcascade_frontalface_default.xml"
+        faceCascade = cv2.CascadeClassifier(cascadePath)  # initializing haar cascade for object detection approach
+
+        font = cv2.FONT_HERSHEY_SIMPLEX  # denotes the font type
+
+        id = 2  # number of persons you want to Recognize
+
+        names = ['', 'mohit']  # names, leave first empty bcz counter starts from 0
+
+        cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # cv2.CAP_DSHOW to remove warning
+        cam.set(3, 640)  # set video FrameWidht
+        cam.set(4, 480)  # set video FrameHeight
+
+        # Define min window size to be recognized as a face
+        minW = 0.1 * cam.get(3)
+        minH = 0.1 * cam.get(4)
+
+        # flag = True
+
+        while True:
+
+            ret, img = cam.read()  # read the frames using the above created object
+
+            converted_image = cv2.cvtColor(img,
+                                           cv2.COLOR_BGR2GRAY)  # The function converts an input image from one color space to another
+
+            faces = faceCascade.detectMultiScale(
+                converted_image,
+                scaleFactor=1.2,
+                minNeighbors=5,
+                minSize=(int(minW), int(minH)),
+            )
+
+            for (x, y, w, h) in faces:
+
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)  # used to draw a rectangle on any image
+
+                id, accuracy = recognizer.predict(converted_image[y:y + h, x:x + w])  # to predict on every single image
+
+                # Check if accuracy is less them 100 ==> "0" is perfect match
+                if (accuracy < 100):
+                    id = names[id]
+                    accuracy = "  {0}%".format(round(100 - accuracy))
+                    TaskExecution()
+
+                else:
+                    id = "unknown"
+                    accuracy = "  {0}%".format(round(100 - accuracy))
+
+                cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
+                cv2.putText(img, str(accuracy), (x + 5, y + h - 5), font, 1, (255, 255, 0), 1)
+
+            cv2.imshow('camera', img)
+
+            k = cv2.waitKey(10) & 0xff  # Press 'ESC' for exiting video
+            if k == 27:
+                break
+
+        # Do a bit of cleanup
+        print("Thanks for using this program, have a good day.")
+        cam.release()
+        cv2.destroyAllWindows()

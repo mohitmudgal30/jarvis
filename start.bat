@@ -1,3 +1,9 @@
-cd  C:\downloaded apps\pythonProject AI assistant
+@echo off
+
+set INTERVAL=10
+:loop
+E:
+cd  E:\7th ai\ai\jarvis-master
 python ja2.py
-exit
+timeout %INTERVAL%
+goto:loop

@@ -1,93 +1,109 @@
+import face_recognition_models
+import os, sys
 import cv2
-from time import sleep
-import time
-import pyttsx3
-import datetime
-import os
-import cv2
-import random
-import requests
-import wikipedia
-import webbrowser
-import socket
-from cv2 import cv2
-import pywhatkit as kit
-import smtplib  # this module is used to send email to anyone : pip install secure-smptlib
-import sys
-import pyjokes
-import speech_recognition as sr
-import docx
-import psutil
+import numpy as np
+import math
 
-#voice
-engine = pyttsx3.init('sapi5')
-voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0"
-voices=engine.getProperty('voice')
-engine.setProperty('voice',voice_id)
+'''
+# Helper
+def face_confidence(face_distance, face_match_threshold=0.6):
+    range = (1.0 - face_match_threshold)
+    linear_val = (1.0 - face_distance) / (range * 2.0)
 
-# text to speech
-def speak(audio):  # converts in audio
-    engine.say(audio)
-    print(audio)
-    engine.runAndWait()
-
-# to voice into text
-def takecommand():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("listening...")
-        r.pause_threshold = 1
-        audio = r.listen(source)
-    try:
-        print("Recognizing...")
-        query = r.recognize_google(audio)
-        print(f"user said: {query}")
-
-    except Exception as e:
-        speak("Say that again please...")
-        return "none"
-
-    return query
+    if face_distance > face_match_threshold:
+        return str(round(linear_val * 100, 2)) + '%'
+    else:
+        value = (linear_val + ((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2))) * 100
+        return str(round(value, 2)) + '%'
 
 
+class FaceRecognition:
+    face_locations = []
+    face_encodings = []
+    face_names = []
+    known_face_encodings = []
+    known_face_names = []
+    process_current_frame = True
 
-key = cv2.waitKey(1)
-webcam = cv2.VideoCapture(0)
-sleep(2)
-while True:
-    query = takecommand().lower()
-    try:
-        check, frame = webcam.read()
-        print(check)  # prints true as long as the webcam is running
-        print(frame)  # prints matrix values of each framecd
-        cv2.imshow("Capturing", frame)
-        key = cv2.waitKey(1)
+    def __init__(self):
+        self.encode_faces()
 
-        if key == ord('play' in query):
-            cv2.imwrite(filename='saved_img.jpg', img=frame)
-            webcam.release()
-            print("Processing image...")
-            img_ = cv2.imread('saved_img.jpg', cv2.IMREAD_ANYCOLOR)
-            print("Converting RGB image to grayscale...")
-            gray = cv2.cvtColor(img_, cv2.COLOR_BGR2GRAY)
-            print("Converted RGB image to grayscale...")
-            print("Resizing image to 28x28 scale...")
-            img_ = cv2.resize(gray, (28, 28))
-            print("Resized...")
-            img_resized = cv2.imwrite(filename='saved_img-final.jpg', img=img_)
-            print("Image saved!")
+    def encode_faces(self):
+        for image in os.listdir('faces'):
+            face_image = face_recognition.load_image_file(f"faces/{image}")
+            face_encoding = face_recognition.face_encodings(face_image)[0]
 
-            break
+            self.known_face_encodings.append(face_encoding)
+            self.known_face_names.append(image)
+        print(self.known_face_names)
 
-        elif key == ord('q'):
-            webcam.release()
-            cv2.destroyAllWindows()
-            break
+    def run_recognition(self):
+        video_capture = cv2.VideoCapture(0)
 
-    except(KeyboardInterrupt):
-        print("Turning off camera.")
-        webcam.release()
-        print("Camera off.")
-        print("Program ended.")
+        if not video_capture.isOpened():
+            sys.exit('Video source not found...')
+
+        while True:
+            ret, frame = video_capture.read()
+
+            # Only process every other frame of video to save time
+            if self.process_current_frame:
+                # Resize frame of video to 1/4 size for faster face recognition processing
+                small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
+                # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+                rgb_small_frame = small_frame[:, :, ::-1]
+
+                # Find all the faces and face encodings in the current frame of video
+                self.face_locations = face_recognition.face_locations(rgb_small_frame)
+                self.face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
+
+                self.face_names = []
+                for face_encoding in self.face_encodings:
+                    # See if the face is a match for the known face(s)
+                    matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
+                    name = "Unknown"
+                    confidence = '???'
+
+                    # Calculate the shortest distance to face
+                    face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
+
+                    best_match_index = np.argmin(face_distances)
+                    if matches[best_match_index]:
+                        name = self.known_face_names[best_match_index]
+                        confidence = face_confidence(face_distances[best_match_index])
+
+                    self.face_names.append(f'{name} ({confidence})')
+
+            self.process_current_frame = not self.process_current_frame
+
+            # Display the results
+            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+                top *= 4
+                right *= 4
+                bottom *= 4
+                left *= 4
+
+                # Create the frame with the name
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 255), 1)
+
+            # Display the resulting image
+            cv2.imshow('Face Recognition', frame)
+
+            # Hit 'q' on the keyboard to quit!
+            if cv2.waitKey(1) == ord('q'):
+                break
+
+        # Release handle to the webcam
+        video_capture.release()
         cv2.destroyAllWindows()
-        break
+
+
+if __name__ == '__main__':
+    fr = FaceRecognition
+    fr.run_recognition()
+'''
+print(cv2.__version__)
